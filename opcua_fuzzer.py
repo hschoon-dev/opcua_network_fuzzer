@@ -11,7 +11,7 @@ from fuzzer import Fuzzer, _s_update
 import argparse
 
 IS_TEST_RUN = False
-
+#test
 
 class OPCUA_Deep_Fuzzer(Fuzzer):
     def __init__(self, target_app_name, request_name, *args, **kwargs):
