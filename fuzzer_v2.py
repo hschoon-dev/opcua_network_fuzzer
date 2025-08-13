@@ -1,3 +1,6 @@
+import asyncio
+from asyncua import Client
+
 from boofuzz import *
 import boofuzz.monitors.external_monitor
 
@@ -71,10 +74,47 @@ class Fuzzer(object):
         return True
 
     # Actions after sending each packet (e.g. checking if target is alive)
+    # BUG: this function is only called after each test case... not each packet
     def post_actions(self, target, fuzz_data_logger, session, sock):
         # TODO: Implement post actions, check what can be done here...
-        return True
+        """
+        Post-fuzzing action to check if the OPC UA application layer is responsive.
+        Returns True if responsive, False if unresponsive.
+        """
+        print(f"Checking if OPC UA application layer is responsive for {target}...")
+        try:
+            result = asyncio.run(check_opcua_application_layer(target))
+            print(f"Application layer responsive: {result}")
+            if not result:
+                print("[ALERT] OPC UA application layer is unresponsive!")
+                exit(1)  # Exit if unresponsive
+            return result
+        except Exception as e:
+            print(f"[ERROR] Exception during post_actions: {e}")
+            return False
+        #return True
 
     # Actions before starting to fuzz (happens once)
     def start_actions(self):
         return True
+
+
+async def check_opcua_application_layer(endpoint_url, timeout=3.0):
+    """
+    Try to connect to the OPC UA server and perform a simple GetEndpoints request.
+    Returns True if the application layer is responsive, False otherwise.
+    """
+    try:
+        async with Client(endpoint_url, timeout=timeout) as client:
+            endpoints = await client.connect_and_get_server_endpoints()
+            if endpoints is not None:
+                #print(f"Endpoints: {endpoints}")
+                await client.disconnect()
+                return True
+            else:
+                await client.disconnect()
+                return False
+    except Exception as e:
+        # Could be timeout, connection error, or protocol error
+        print(f"Exception during OPC UA connection: {e}")
+        return False

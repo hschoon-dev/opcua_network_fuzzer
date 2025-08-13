@@ -8,6 +8,7 @@ from opcua_session import create_session, OBJECT
 from opcua_services import *
 from opcua_utils import *
 from fuzzer import Fuzzer, _s_update
+#from fuzzer_v2 import Fuzzer, _s_update
 import argparse
 
 IS_TEST_RUN = False
@@ -81,6 +82,9 @@ class OPCUA_Deep_Fuzzer(Fuzzer):
     def post_actions(self, target, fuzz_data_logger, session, sock):
         try:
             if not IS_TEST_RUN:
+                # TODO: test
+                #endpoint_url = f"opc.tcp://{self.target_ip}:{self.target_port}"
+                #super().post_actions(endpoint_url, fuzz_data_logger, session, sock)
                 super().post_actions(target, fuzz_data_logger, session, sock)
 
             close_session(self.sock, self.target_app, self.session_info)
